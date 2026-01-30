@@ -1,0 +1,50 @@
+# Server Health Check
+
+A bash script to monitor health metrics of multiple remote servers via SSH.
+
+## Features
+
+- System uptime monitoring
+- Disk usage tracking (root partition)
+- Memory utilization stats
+- SSH security audit (failed login attempts)
+- Logging to temporary file
+- Automatic cleanup on exit
+
+## Requirements
+
+- SSH access to target servers
+- Bash shell
+- Standard Unix utilities (df, free, awk, grep)
+
+## Usage
+
+```bash
+./server_health_check.sh -f <server_list_file> -u <remote_user>
+```
+
+### Options
+
+- `-f` : Path to file containing server list (one per line)
+- `-u` : Remote SSH username
+- `-h` : Display help
+
+### Server List Format
+
+Create a text file with one server per line:
+```
+server1.example.com
+192.168.1.10
+server2.example.com
+# Comments are ignored
+```
+
+## Example
+
+```bash
+./server_health_check.sh -f servers.txt -u admin
+```
+
+## Output
+
+The script creates a temporary log file in `/tmp/server_health.XXXXXX` and displays results in real-time. The log file is automatically deleted on exit.
