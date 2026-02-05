@@ -9,7 +9,6 @@ A web-based interface for running server health checks on multiple remote server
 - 📥 **File Upload**: Simple drag-and-drop or browse file upload
 - 📄 **Downloadable Reports**: Get detailed text reports of all health checks
 - 🔒 **Secure**: Multiple security layers protect your data (see [SECURITY.md](SECURITY.md))
-- 🐳 **Docker Ready**: Easy deployment with Docker and Docker Compose
 - 🛡️ **Privacy First**: No IP logging, session-based identification, sanitized outputs
 - ⚡ **Rate Limited**: Protection against abuse with request limiting
 - 🔐 **Input Validation**: Comprehensive validation prevents injection attacks
@@ -36,34 +35,7 @@ python app.py
 3. **Access the Application**
 Open your browser and navigate to: `http://localhost:5000`
 
-### Option 2: Docker Deployment (Recommended)
-
-1. **Build and Run with Docker Compose**
-```bash
-# Generate a secure secret key
-export SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))")
-
-# Build and start the container
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop the container
-docker-compose down
-```
-
-2. **Access the Application**
-Open your browser and navigate to: `http://localhost:5000`
-
-**Security Note**: For production, set a permanent SECRET_KEY in a `.env` file:
-```bash
-cp .env.example .env
-# Edit .env and set a secure SECRET_KEY
-docker-compose up -d
-```
-
-### Option 3: Production Deployment (Ubuntu/Debian)
+### Option 2: Production Deployment (Ubuntu/Debian)
 
 1. **Install System Dependencies**
 ```bash
@@ -181,9 +153,6 @@ ssh-copy-id username@server-hostname
 ssh username@server-hostname
 ```
 
-3. **For Docker**: Mount your SSH keys
-The docker-compose.yml already mounts `~/.ssh` directory. Ensure your keys are in the default location.
-
 ## API Endpoints
 
 - `GET /` - Main web interface
@@ -275,8 +244,8 @@ All data is session-based and automatically deleted after 24 hours.
 # Check logs
 sudo journalctl -u health-check -f
 
-# Or for Docker
-docker-compose logs -f
+# Or check application logs directly
+tail -f /tmp/server_health.*
 ```
 
 ### Permission Issues
@@ -303,10 +272,9 @@ Health_Check/
 │   └── script.js              # Frontend JavaScript
 ├── uploads/                    # Uploaded files (created automatically)
 ├── results/                    # Result files (created automatically)
-├── Dockerfile                  # Docker image definition
-├── docker-compose.yml          # Docker Compose configuration
-├── health-check.service        # Systemd service file
-└── nginx.conf                  # Nginx configuration
+├── Procfile                    # Render process definition
+├── build.sh                    # Build automation script
+└── render.yaml                 # Render deployment config
 ```
 
 ### Running Tests
