@@ -1,0 +1,51 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Flask
+instance/
+.webassets-cache
+
+# Environment
+.env
+.env.local
+.env.production
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Upload and result directories
+uploads/
+results/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Security - Never commit these!
+*.key
+*.pem
+*.crt
+id_rsa*
+known_hosts
+
+# Vercel
+.vercel
+.vercel/*

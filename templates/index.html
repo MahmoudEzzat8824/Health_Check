@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Health Check</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 Server Health Check</h1>
+            <p class="subtitle">Upload your server list and monitor system health</p>
+        </header>
+
+        <div class="card">
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="username">SSH Username:</label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        placeholder="e.g., admin or root"
+                        required
+                    >
+                    <small>The SSH username to connect to remote servers</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="fileInput">Server List File (.txt):</label>
+                    <div class="file-upload">
+                        <input 
+                            type="file" 
+                            id="fileInput" 
+                            name="file" 
+                            accept=".txt"
+                            required
+                        >
+                        <label for="fileInput" class="file-label">
+                            <span id="fileName">Choose file...</span>
+                        </label>
+                    </div>
+                    <small>One server per line (IP addresses or hostnames)</small>
+                </div>
+
+                <button type="submit" id="submitBtn" class="btn-primary">
+                    Run Health Check
+                </button>
+            </form>
+
+            <div id="loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Running health checks... This may take a few minutes.</p>
+            </div>
+        </div>
+
+        <div id="resultCard" class="card result-card" style="display: none;">
+            <h2>Results</h2>
+            <div id="resultInfo" class="result-info"></div>
+            <div class="result-actions">
+                <button id="downloadBtn" class="btn-secondary">
+                    Download Results
+                </button>
+                <button id="newCheckBtn" class="btn-secondary">
+                    New Check
+                </button>
+            </div>
+            <div id="resultOutput" class="output-container"></div>
+        </div>
+
+        <div class="info-section">
+            <h3>ℹ️ How to Use</h3>
+            <ol>
+                <li>Create a text file with your server list (one per line)</li>
+                <li>Enter the SSH username for connecting to the servers</li>
+                <li>Upload your file and click "Run Health Check"</li>
+                <li>Wait for the results and download the report</li>
+            </ol>
+            
+            <h4>Server List Format:</h4>
+            <pre>server1.example.com
+192.168.1.10
+server2.example.com
+# Comments start with #</pre>
+
+            <h4>Monitored Metrics:</h4>
+            <ul>
+                <li>System uptime</li>
+                <li>Disk usage (root partition)</li>
+                <li>Memory utilization</li>
+                <li>SSH security audit (failed login attempts)</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

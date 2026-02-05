@@ -1,50 +1,359 @@
-# Server Health Check
+# Server Health Check Web Application
 
-A bash script to monitor health metrics of multiple remote servers via SSH.
+A web-based interface for running server health checks on multiple remote servers via SSH. Upload a list of server IPs/hostnames, and get comprehensive health reports including uptime, disk usage, memory utilization, and security audit information.
 
 ## Features
 
-- System uptime monitoring
-- Disk usage tracking (root partition)
-- Memory utilization stats
-- SSH security audit (failed login attempts)
-- Logging to temporary file
-- Automatic cleanup on exit
+- 🌐 **Web Interface**: User-friendly web UI for uploading server lists
+- 📊 **Comprehensive Checks**: System uptime, disk usage, memory stats, and SSH security audit
+- 📥 **File Upload**: Simple drag-and-drop or browse file upload
+- 📄 **Downloadable Reports**: Get detailed text reports of all health checks
+- 🔒 **Secure**: Multiple security layers protect your data (see [SECURITY.md](SECURITY.md))
+- 🐳 **Docker Ready**: Easy deployment with Docker and Docker Compose
+- 🛡️ **Privacy First**: No IP logging, session-based identification, sanitized outputs
+- ⚡ **Rate Limited**: Protection against abuse with request limiting
+- 🔐 **Input Validation**: Comprehensive validation prevents injection attacks
 
-## Requirements
+## Quick Start
 
-- SSH access to target servers
-- Bash shell
-- Standard Unix utilities (df, free, awk, grep)
+### Option 1: Local Development
+
+1. **Install Dependencies**
+```bash
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install requirements
+pip install -r requirements.txt
+```
+
+2. **Run the Application**
+```bash
+python app.py
+```
+
+3. **Access the Application**
+Open your browser and navigate to: `http://localhost:5000`
+
+### Option 2: Docker Deployment (Recommended)
+
+1. **Build and Run with Docker Compose**
+```bash
+# Generate a secure secret key
+export SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))")
+
+# Build and start the container
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop the container
+docker-compose down
+```
+
+2. **Access the Application**
+Open your browser and navigate to: `http://localhost:5000`
+
+**Security Note**: For production, set a permanent SECRET_KEY in a `.env` file:
+```bash
+cp .env.example .env
+# Edit .env and set a secure SECRET_KEY
+docker-compose up -d
+```
+
+### Option 3: Production Deployment (Ubuntu/Debian)
+
+1. **Install System Dependencies**
+```bash
+sudo apt update
+sudo apt install python3 python3-venv python3-pip nginx
+```
+
+2. **Setup Application**
+```bash
+# Create application directory
+sudo mkdir -p /opt/health-check
+sudo chown $USER:$USER /opt/health-check
+
+# Copy files to deployment directory
+cp -r * /opt/health-check/
+cd /opt/health-check
+
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+pip install gunicorn
+```
+
+3. **Setup Systemd Service**
+```bash
+# Copy service file
+sudo cp health-check.service /etc/systemd/system/
+
+# Edit service file to match your setup
+sudo nano /etc/systemd/system/health-check.service
+
+# Enable and start service
+sudo systemctl daemon-reload
+sudo systemctl enable health-check
+sudo systemctl start health-check
+
+# Check status
+sudo systemctl status health-check
+```
+
+4. **Setup Nginx Reverse Proxy**
+```bash
+# Copy nginx configuration
+sudo cp nginx.conf /etc/nginx/sites-available/health-check
+
+# Update domain name in config
+sudo nano /etc/nginx/sites-available/health-check
+
+# Enable site
+sudo ln -s /etc/nginx/sites-available/health-check /etc/nginx/sites-enabled/
+
+# Test nginx configuration
+sudo nginx -t
+
+# Restart nginx
+sudo systemctl restart nginx
+```
+
+5. **(Optional) Setup SSL with Let's Encrypt**
+```bash
+sudo apt install certbot python3-certbot-nginx
+sudo certbot --nginx -d your-domain.com
+```
 
 ## Usage
 
-```bash
-./server_health_check.sh -f <server_list_file> -u <remote_user>
-```
+### 1. Prepare Your Server List
 
-### Options
+Create a text file (e.g., `servers.txt`) with one server per line:
 
-- `-f` : Path to file containing server list (one per line)
-- `-u` : Remote SSH username
-- `-h` : Display help
-
-### Server List Format
-
-Create a text file with one server per line:
 ```
 server1.example.com
 192.168.1.10
+192.168.1.20
 server2.example.com
 # Comments are ignored
 ```
 
-## Example
+### 2. Upload and Run
 
+1. Open the web interface in your browser
+2. Enter the SSH username (e.g., `admin` or `root`)
+3. Upload your server list file
+4. Click "Run Health Check"
+5. Wait for results (may take a few minutes for multiple servers)
+6. Download the detailed report
+
+### 3. Review Results
+
+The application will display:
+- System uptime for each server
+- Disk usage statistics
+- Memory utilization
+- Failed SSH login attempts (security audit)
+
+## SSH Setup
+
+The application requires SSH access to your servers. Ensure:
+
+1. **SSH Keys are Configured**
 ```bash
-./server_health_check.sh -f servers.txt -u admin
+# Generate SSH key if you don't have one
+ssh-keygen -t rsa -b 4096
+
+# Copy key to servers
+ssh-copy-id username@server-hostname
 ```
 
-## Output
+2. **Test SSH Access**
+```bash
+# Verify you can connect without password
+ssh username@server-hostname
+```
 
-The script creates a temporary log file in `/tmp/server_health.XXXXXX` and displays results in real-time. The log file is automatically deleted on exit.
+3. **For Docker**: Mount your SSH keys
+The docker-compose.yml already mounts `~/.ssh` directory. Ensure your keys are in the default location.
+
+## API Endpoints
+
+- `GET /` - Main web interface
+- `POST /api/upload` - Upload server list and run health check
+- `GET /api/download/<job_id>` - Download results for a specific job
+- `GET /health` - Application health check endpoint
+
+## Configuration
+
+### Environment Variables
+
+You can configure the application using environment variables:
+
+- `FLASK_ENV`: Set to `production` for production deployment
+- `MAX_CONTENT_LENGTH`: Maximum upload file size (default: 1MB)
+
+### File Locations
+
+- `uploads/` - Temporary storage for uploaded server lists
+- `results/` - Stored health check results
+- Logs are created in `/tmp/server_health.XXXXXX` during script execution
+
+## Security Considerations
+
+**🔒 This application implements comprehensive security measures:**
+
+- ✅ **No IP Logging**: Anonymous session-based identification
+- ✅ **Output Sanitization**: Removes sensitive data from results
+- ✅ **Input Validation**: Prevents injection attacks
+- ✅ **Rate Limiting**: Protects against abuse
+- ✅ **Security Headers**: XSS, clickjacking, and MIME-sniffing protection
+- ✅ **Session Security**: Secure, HttpOnly cookies
+- ✅ **File Validation**: Strict validation of uploads
+- ✅ **Access Control**: Users can only download their own results
+- ✅ **Automatic Cleanup**: Files deleted after 24 hours
+
+**For detailed security information, see [SECURITY.md](SECURITY.md)**
+
+### Production Security Checklist
+
+Before deploying to production:
+
+1. **Set Secure Secret Key**:
+```bash
+export SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))")
+```
+
+2. **Enable HTTPS** (required for secure cookies):
+```bash
+sudo certbot --nginx -d yourdomain.com
+```
+
+3. **Configure Firewall**:
+```bash
+sudo ufw allow 22/tcp    # SSH
+sudo ufw allow 80/tcp    # HTTP
+sudo ufw allow 443/tcp   # HTTPS
+sudo ufw enable
+```
+
+4. **Review Security Settings**: Check [SECURITY.md](SECURITY.md) for complete guide
+
+5. **Run Security Tests**:
+```bash
+python3 test_security.py
+```
+
+### What Data is Protected
+
+**We DO NOT collect or store**:
+- User IP addresses
+- Server hostnames/IPs (after job completion)
+- SSH credentials or keys
+- Personal information
+- Long-term logs
+
+All data is session-based and automatically deleted after 24 hours.
+
+## Troubleshooting
+
+### SSH Connection Failures
+- Verify SSH keys are properly configured
+- Check network connectivity to target servers
+- Ensure the SSH username is correct
+- Verify firewall rules allow SSH (port 22)
+
+### Application Won't Start
+```bash
+# Check logs
+sudo journalctl -u health-check -f
+
+# Or for Docker
+docker-compose logs -f
+```
+
+### Permission Issues
+```bash
+# Ensure script is executable
+chmod +x server_health_check.sh
+
+# Check file ownership
+ls -la
+```
+
+## Development
+
+### Project Structure
+```
+Health_Check/
+├── app.py                      # Flask application
+├── server_health_check.sh      # Health check script
+├── requirements.txt            # Python dependencies
+├── templates/
+│   └── index.html             # Web interface
+├── static/
+│   ├── style.css              # Styles
+│   └── script.js              # Frontend JavaScript
+├── uploads/                    # Uploaded files (created automatically)
+├── results/                    # Result files (created automatically)
+├── Dockerfile                  # Docker image definition
+├── docker-compose.yml          # Docker Compose configuration
+├── health-check.service        # Systemd service file
+└── nginx.conf                  # Nginx configuration
+```
+
+### Running Tests
+```bash
+# Create a test server list
+echo "localhost" > test_servers.txt
+
+# Test the script directly
+./server_health_check.sh -f test_servers.txt -u $USER
+
+# Test the web application
+python app.py
+# Then access http://localhost:5000
+```
+
+## Requirements
+
+- Python 3.8+
+- SSH client
+- Bash
+- Target servers must have:
+  - SSH access enabled
+  - Standard Unix utilities (df, free, uptime, awk)
+
+## License
+
+This project is open source and available for educational and commercial use.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit issues or pull requests.
+
+## Support
+
+For issues or questions:
+1. Check the Troubleshooting section
+2. Review the logs
+3. Ensure all requirements are met
+4. Test SSH connectivity manually
+
+## Roadmap
+
+Potential future enhancements:
+- User authentication and authorization
+- Database storage for historical results
+- Scheduled health checks
+- Email notifications
+- Dashboard with charts and graphs
+- Support for different monitoring metrics
+- Multi-user support with role-based access
